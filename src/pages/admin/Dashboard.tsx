@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTournament } from '../../context/TournamentContext';
 import { NeonCard } from '../../components/ui/Shared';
 import {

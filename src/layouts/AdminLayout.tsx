@@ -1,4 +1,3 @@
-import React from 'react';
 import { Outlet, Navigate, Link } from 'react-router-dom';
 import { Swords } from 'lucide-react';
 import { theme } from '../lib/theme';

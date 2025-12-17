@@ -10,3 +10,8 @@
 1:53:09 AM [vite] hmr update /src/index.css, /src/context/TournamentContext.tsx
 2:05:53 AM [vite] hmr update /src/index.css, /src/context/TournamentContext.tsx
 2:06:21 AM [vite] hmr update /src/context/TournamentContext.tsx, /src/index.css
+2:15:41 AM [vite] hmr update /src/App.tsx, /src/index.css
+2:15:53 AM [vite] hmr update /src/layouts/AdminLayout.tsx, /src/index.css
+2:16:03 AM [vite] hmr update /src/layouts/ViewerLayout.tsx, /src/index.css
+2:16:32 AM [vite] hmr update /src/pages/admin/Dashboard.tsx, /src/index.css
+2:16:53 AM [vite] hmr update /src/pages/viewer/Landing.tsx, /src/index.css

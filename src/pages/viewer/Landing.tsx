@@ -1,4 +1,3 @@
-import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useTournament } from '../../context/TournamentContext';
 import { motion, AnimatePresence } from 'framer-motion';
