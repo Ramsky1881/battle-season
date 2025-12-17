@@ -13,7 +13,8 @@ export default function AdminLogin() {
   // If already authenticated, redirect to dashboard
   useEffect(() => {
     if (localStorage.getItem('admin_auth') === 'true') {
-      navigate('/admin/dashboard', { replace: true });
+      // Fix: navigate to /dashboard instead of /admin/dashboard to match AdminApp routes
+      navigate('/dashboard', { replace: true });
     }
   }, [navigate]);
 
@@ -25,25 +26,23 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      const response = await fetch('/api/admin-auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      // Use client-side validation with environment variables
+      const envUser = import.meta.env.VITE_ADMIN_USER;
+      const envPass = import.meta.env.VITE_ADMIN_PASS;
 
-      const data = await response.json();
+      // Simulate network delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (response.ok && data.success) {
+      if (username === envUser && password === envPass) {
         localStorage.setItem('admin_auth', 'true');
-        navigate('/admin/dashboard');
+        // Fix: navigate to /dashboard
+        navigate('/dashboard');
       } else {
         setError('ACCESS DENIED: INVALID CREDENTIALS');
         setPassword('');
       }
     } catch (err) {
-      setError('ACCESS DENIED: CONNECTION ERROR');
+      setError('ACCESS DENIED: UNKNOWN ERROR');
       setPassword('');
     } finally {
       setIsLoading(false);
