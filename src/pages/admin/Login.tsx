@@ -17,17 +17,36 @@ export default function AdminLogin() {
     }
   }, [navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const envUser = import.meta.env.VITE_ADMIN_USER;
-    const envPass = import.meta.env.VITE_ADMIN_PASS;
+  const [isLoading, setIsLoading] = useState(false);
 
-    if (username === envUser && password === envPass) {
-      localStorage.setItem('admin_auth', 'true');
-      navigate('/admin/dashboard');
-    } else {
-      setError('ACCESS DENIED: INVALID CREDENTIALS');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        localStorage.setItem('admin_auth', 'true');
+        navigate('/admin/dashboard');
+      } else {
+        setError('ACCESS DENIED: INVALID CREDENTIALS');
+        setPassword('');
+      }
+    } catch (err) {
+      setError('ACCESS DENIED: CONNECTION ERROR');
       setPassword('');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -70,9 +89,10 @@ export default function AdminLogin() {
 
           <button
             type="submit"
-            className="w-full py-3 bg-cyan-900/20 border border-cyan-500 text-cyan-400 font-orbitron font-bold rounded hover:bg-cyan-500 hover:text-black transition-all flex items-center justify-center gap-2"
+            disabled={isLoading}
+            className="w-full py-3 bg-cyan-900/20 border border-cyan-500 text-cyan-400 font-orbitron font-bold rounded hover:bg-cyan-500 hover:text-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Lock size={16} /> AUTHENTICATE
+            <Lock size={16} /> {isLoading ? 'AUTHENTICATING...' : 'AUTHENTICATE'}
           </button>
         </form>
       </div>
