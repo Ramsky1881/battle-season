@@ -15,15 +15,6 @@ const RoomCard = ({ title, players, qualifyCount, activeMode, showRank = true, i
         <div className="text-xs font-oxanium text-slate-500">{players.length} PLAYERS</div>
       </div>
 
-      {activeMode && (
-        <div className="bg-purple-900/20 border-b border-purple-500/30 p-2 text-center">
-          <div className="text-[10px] text-purple-400 font-oxanium tracking-widest uppercase mb-1">CURRENT MODE</div>
-          <div className="text-white font-orbitron text-sm animate-pulse shadow-purple-500/50 drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]">
-            {activeMode}
-          </div>
-        </div>
-      )}
-
       <div className="p-2 space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar">
         {players.length === 0 && (
            <div className="text-center py-8 text-slate-600 font-oxanium text-sm">WAITING FOR DATA...</div>
@@ -57,6 +48,15 @@ const RoomCard = ({ title, players, qualifyCount, activeMode, showRank = true, i
           );
         })}
       </div>
+
+      {activeMode && (
+        <div className="bg-purple-900/20 border-t border-purple-500/30 p-2 text-center mt-auto">
+          <div className="text-[10px] text-purple-400 font-oxanium tracking-widest uppercase mb-1">ACTIVE MODE</div>
+          <div className="text-white font-orbitron text-sm animate-pulse shadow-purple-500/50 drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]">
+            {activeMode}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

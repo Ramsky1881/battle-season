@@ -15,6 +15,12 @@ export type Player = {
 
 export type Stage = 'QUALIFIERS_D1' | 'QUALIFIERS_D2' | 'SEMIFINALS' | 'FINALS';
 
+export type WheelMode = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
 export type AppState = {
   stage: Stage;
   activeRoomViewer: string; // Room yang sedang dilihat viewer
