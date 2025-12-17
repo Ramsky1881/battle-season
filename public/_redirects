@@ -1,1 +1,6 @@
+# Handle admin routes
+/admin/* /admin.html 200
+/admin /admin.html 200
+
+# Default catch-all for viewer app
 /* /index.html 200
