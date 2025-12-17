@@ -15,3 +15,4 @@
 2:16:03 AM [vite] hmr update /src/layouts/ViewerLayout.tsx, /src/index.css
 2:16:32 AM [vite] hmr update /src/pages/admin/Dashboard.tsx, /src/index.css
 2:16:53 AM [vite] hmr update /src/pages/viewer/Landing.tsx, /src/index.css
+2:28:17 AM [vite] changed tsconfig file detected: /app/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
