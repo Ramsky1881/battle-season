@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
-  collection, doc, setDoc, onSnapshot, updateDoc, query
+  collection, doc, setDoc, onSnapshot, updateDoc, query, Firestore
 } from 'firebase/firestore';
 import {
-  signInAnonymously, onAuthStateChanged, signInWithCustomToken
+  signInAnonymously, onAuthStateChanged, signInWithCustomToken, Auth
 } from 'firebase/auth';
-import { auth, db, appId } from '../lib/firebase';
+import { getFirebaseAuth, getFirebaseDb, appId } from '../lib/firebase';
 import { Player, AppState } from '../types';
 
 interface TournamentContextType {
@@ -36,26 +36,45 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [loading, setLoading] = useState(true);
   const [isAdminMode] = useState(false); // Can be removed if not used
 
+  // Firebase instances (populated after async init)
+  const authRef = useRef<Auth | null>(null);
+  const dbRef = useRef<Firestore | null>(null);
+
   // Auth & Init
   useEffect(() => {
+    let unsubAuth: (() => void) | undefined;
+
     const init = async () => {
       try {
+        // Wait for Firebase to be initialized
+        const [auth, db] = await Promise.all([getFirebaseAuth(), getFirebaseDb()]);
+        authRef.current = auth;
+        dbRef.current = db;
+
         if (typeof (window as any).__initial_auth_token !== 'undefined' && (window as any).__initial_auth_token) {
           await signInWithCustomToken(auth, (window as any).__initial_auth_token);
         } else {
           await signInAnonymously(auth);
         }
+
+        // Set up auth state listener after Firebase is ready
+        unsubAuth = onAuthStateChanged(auth, setUser);
       } catch (e) {
         console.error("Auth error", e);
+        setLoading(false);
       }
     };
     init();
-    return onAuthStateChanged(auth, setUser);
+
+    return () => {
+      if (unsubAuth) unsubAuth();
+    };
   }, []);
 
   // Data Sync
   useEffect(() => {
-    if (!user) return;
+    if (!user || !dbRef.current) return;
+    const db = dbRef.current;
 
     // Listen to Players
     const qPlayers = query(collection(db, 'artifacts', appId, 'public', 'data', 'players'));
@@ -108,6 +127,8 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Actions
   const addPlayer = async (name: string, room: string) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
     const newPlayer: Player = {
       id: crypto.randomUUID(),
       name,
@@ -120,6 +141,8 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const updateScore = async (playerId: string, gameIndex: number, score: number) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
     const player = players.find(p => p.id === playerId);
     if (!player) return;
 
@@ -136,14 +159,20 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const setStage = async (stage: AppState['stage']) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), { stage });
   };
 
   const setViewerRoom = async (room: string) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), { activeRoomViewer: room });
   };
 
   const runWheel = async (room: string) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
     const roomPlayers = getPlayersInRoom(room);
     if (roomPlayers.length === 0) return;
 
@@ -179,6 +208,8 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const advanceQualifiers = async (dayRooms: string[]) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
     for (const r of dayRooms) {
       const sorted = getPlayersInRoom(r);
       for (let i = 0; i < 2; i++) {
@@ -203,6 +234,8 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const advanceSemis = async () => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
     for (const r of ['A', 'B']) {
       const sorted = getPlayersInRoom(r);
       for (let i = 0; i < 3; i++) {
