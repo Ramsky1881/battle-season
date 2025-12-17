@@ -19,6 +19,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/tournament" replace />} />
 
           {/* ADMIN ROUTES */}
+          <Route path="/admin/Login" element={<Navigate to="/admin/login" replace />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -34,6 +35,9 @@ export default function App() {
                 Currently ViewerPage uses appState.activeRoomViewer from Firebase.
             */}
           </Route>
+
+          {/* CATCH ALL */}
+          <Route path="*" element={<Navigate to="/tournament" replace />} />
 
         </Routes>
       </BrowserRouter>
