@@ -58,6 +58,12 @@ src/
 *   **Code Obfuscation**: The production build minifies and chunks code, making it difficult to reverse-engineer logic.
 *   **Admin Auth**: While currently client-side (per requirements), the credentials are not hardcoded in the source repository but injected at build time via Env Vars.
 
+## Demo Mode
+To prevent "blank screen" issues when the Firebase configuration is missing (e.g., in a preview environment or before the backend is fully connected), the application automatically enters **Demo Mode**.
+*   **Behavior**: It uses local mock data for players and scores.
+*   **Indicators**: A console warning `⚠️ No valid Firebase Config found. Entering DEMO MODE.` will appear.
+*   **Resolution**: To switch to production mode, ensure `VITE_FIREBASE_CONFIG` is set in the environment variables.
+
 ## Consistency Guidelines
 *   **Theme**: Always import `theme` from `@/lib/theme`.
 *   **Components**: Use `NeonCard` for containers to maintain the Cyberpunk aesthetic.

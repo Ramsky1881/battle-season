@@ -8,3 +8,5 @@
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://192.168.0.2:5173/
 1:53:09 AM [vite] hmr update /src/index.css, /src/context/TournamentContext.tsx
+2:05:53 AM [vite] hmr update /src/index.css, /src/context/TournamentContext.tsx
+2:06:21 AM [vite] hmr update /src/context/TournamentContext.tsx, /src/index.css
