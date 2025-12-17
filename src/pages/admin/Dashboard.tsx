@@ -246,11 +246,16 @@ export default function AdminDashboard() {
                               <option value="eliminated">Eliminated</option>
                             </select>
                          ) : (
-                           <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                             p.status === 'qualified' ? 'bg-green-900/50 text-green-400' :
-                             p.status === 'eliminated' ? 'bg-red-900/50 text-red-400' :
-                             'bg-blue-900/50 text-blue-400'
-                           }`}>{p.status}</span>
+                           <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider inline-flex items-center gap-1 ${
+                             p.status === 'qualified' ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-500/50 animate-pulse shadow-[0_0_10px_rgba(234,179,8,0.5)]' :
+                             p.status === 'eliminated' ? 'bg-red-900/40 text-red-500 border border-red-500/50 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]' :
+                             'bg-green-900/40 text-green-400 border border-green-500/50 animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.5)]'
+                           }`}>
+                             {p.status === 'qualified' && '★'}
+                             {p.status === 'eliminated' && '✕'}
+                             {p.status === 'active' && '●'}
+                             {p.status}
+                           </span>
                          )}
                        </td>
                        <td className="p-3 text-yellow-400 font-oxanium text-lg">{p.totalScore}</td>

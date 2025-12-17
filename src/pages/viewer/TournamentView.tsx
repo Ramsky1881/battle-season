@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { useTournament } from '../../context/TournamentContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Crown, ChevronDown, User
+  Crown, ChevronDown, LogIn
 } from 'lucide-react';
 import { Player } from '../../types';
-import { useNavigate } from 'react-router-dom';
 
 const RoomCard = ({ title, players, qualifyCount, activeMode, showRank = true, id }: { title: string, players: Player[], qualifyCount: number, activeMode?: string, showRank?: boolean, id?: string }) => {
   return (
@@ -24,10 +23,14 @@ const RoomCard = ({ title, players, qualifyCount, activeMode, showRank = true, i
           const isQualifying = idx < qualifyCount;
           return (
             <div key={p.id} className={`
-              flex items-center justify-between p-2 rounded border-l-2 transition-all
+              flex items-center justify-between p-2 rounded border-l-2 transition-all relative overflow-hidden
               ${isQualifying ? 'bg-cyan-900/10 border-cyan-500' : 'bg-slate-800/30 border-slate-700 opacity-60'}
             `}>
-              <div className="flex items-center gap-3">
+              {/* Status Indicator Background Effect */}
+              {p.status === 'qualified' && <div className="absolute inset-0 bg-yellow-500/5 animate-pulse pointer-events-none" />}
+              {p.status === 'eliminated' && <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none" />}
+
+              <div className="flex items-center gap-3 z-10">
                 {showRank && (
                   <div className={`
                     w-6 h-6 flex items-center justify-center text-xs font-bold rounded
@@ -37,11 +40,22 @@ const RoomCard = ({ title, players, qualifyCount, activeMode, showRank = true, i
                   `}>{rank}</div>
                 )}
                 <div>
-                   <div className={`font-bold text-sm ${isQualifying ? 'text-white' : 'text-slate-400'}`}>{p.name}</div>
+                   <div className={`font-bold text-sm ${isQualifying ? 'text-white' : 'text-slate-400'} flex items-center gap-2`}>
+                     {p.name}
+                     {/* Status Badge */}
+                     <span className={`text-[8px] px-1.5 py-0.5 rounded border uppercase font-bold tracking-wider shadow-[0_0_5px_rgba(0,0,0,0.5)] whitespace-nowrap ${
+                       p.status === 'qualified' ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400 animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.4)]' :
+                       p.status === 'eliminated' ? 'bg-red-500/20 border-red-500/50 text-red-400 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.4)]' :
+                       'bg-green-500/20 border-green-500/50 text-green-400 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]'
+                     }`}>
+                        {p.status === 'qualified' ? 'QUALIFIED' :
+                         p.status === 'eliminated' ? 'ELIMINATED' : 'ACTIVE'}
+                     </span>
+                   </div>
                    <div className="text-[10px] text-slate-500 font-mono">{p.nick}</div>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-right z-10">
                 <div className={`font-oxanium font-bold ${isQualifying ? 'text-cyan-400' : 'text-slate-500'}`}>{p.totalScore}</div>
               </div>
             </div>
@@ -63,10 +77,10 @@ const RoomCard = ({ title, players, qualifyCount, activeMode, showRank = true, i
 
 export default function TournamentView() {
   const { appState, getPlayersInRoom } = useTournament();
-  const navigate = useNavigate();
 
   // Navigation State
   const [activeSection, setActiveSection] = useState<'QUALIFIERS' | 'SEMIS' | 'FINALS'>('QUALIFIERS');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Sync with Admin Default View, but allow user override
   useEffect(() => {
@@ -115,33 +129,52 @@ export default function TournamentView() {
              </div>
 
              {/* Mobile Dropdown / Quick Jump */}
-             <div className="relative group">
-               <button className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-xs font-bold text-cyan-400">
-                 JUMP TO <ChevronDown size={14} />
+             <div className="relative">
+               <button
+                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                 className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-xs font-bold text-cyan-400 hover:bg-slate-800 transition-colors"
+               >
+                 JUMP TO <motion.div animate={{ rotate: isDropdownOpen ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown size={14} /></motion.div>
                </button>
-               <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded shadow-xl hidden group-hover:block max-h-80 overflow-y-auto z-50">
-                 <div className="p-2 text-[10px] text-slate-500 font-bold">QUALIFIERS</div>
-                 {[1,2,3,4,5,6].map(r => (
-                   <button key={r} onClick={() => jumpToRoom('QUALIFIERS', `room-${r}`)} className="block w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800">
-                     ROOM {r}
-                   </button>
-                 ))}
 
-                 <div className="border-t border-slate-800 my-1"></div>
-                 <div className="p-2 text-[10px] text-slate-500 font-bold">SEMIS</div>
-                 <button onClick={() => jumpToRoom('SEMIS', 'room-A')} className="block w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800">SEMI FINAL 1 (A)</button>
-                 <button onClick={() => jumpToRoom('SEMIS', 'room-B')} className="block w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800">SEMI FINAL 2 (B)</button>
+               <AnimatePresence>
+                 {isDropdownOpen && (
+                   <motion.div
+                     initial={{ opacity: 0, y: -10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     exit={{ opacity: 0, y: -10 }}
+                     transition={{ duration: 0.2 }}
+                     className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded shadow-[0_0_20px_rgba(0,0,0,0.8)] max-h-80 overflow-y-auto z-50"
+                   >
+                     <div className="p-2 text-[10px] text-slate-500 font-bold">QUALIFIERS</div>
+                     {[1,2,3,4,5,6].map(r => (
+                       <button key={r} onClick={() => { jumpToRoom('QUALIFIERS', `room-${r}`); setIsDropdownOpen(false); }} className="block w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800 transition-colors">
+                         ROOM {r}
+                       </button>
+                     ))}
 
-                 <div className="border-t border-slate-800 my-1"></div>
-                 <div className="p-2 text-[10px] text-slate-500 font-bold">FINALS</div>
-                 <button onClick={() => jumpToRoom('FINALS', 'room-FINAL')} className="block w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800">FINAL BATTLE</button>
+                     <div className="border-t border-slate-800 my-1"></div>
+                     <div className="p-2 text-[10px] text-slate-500 font-bold">SEMIS</div>
+                     <button onClick={() => { jumpToRoom('SEMIS', 'room-A'); setIsDropdownOpen(false); }} className="block w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800 transition-colors">SEMI FINAL 1 (A)</button>
+                     <button onClick={() => { jumpToRoom('SEMIS', 'room-B'); setIsDropdownOpen(false); }} className="block w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800 transition-colors">SEMI FINAL 2 (B)</button>
 
-                 <div className="border-t border-slate-800 my-1"></div>
-                 <button onClick={() => navigate('/login')} className="block w-full text-left px-4 py-3 text-xs text-purple-400 hover:bg-slate-800 flex items-center gap-2 font-bold">
-                   <User size={12} /> ADMIN LOGIN
-                 </button>
-               </div>
+                     <div className="border-t border-slate-800 my-1"></div>
+                     <div className="p-2 text-[10px] text-slate-500 font-bold">FINALS</div>
+                     <button onClick={() => { jumpToRoom('FINALS', 'room-FINAL'); setIsDropdownOpen(false); }} className="block w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800 transition-colors">FINAL BATTLE</button>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
              </div>
+
+             {/* Admin Login Button - Replaces the red block functionality */}
+             <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => window.location.href = '/admin/login'}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded shadow-[0_0_15px_rgba(220,38,38,0.5)] border border-red-400 transition-colors"
+             >
+                <LogIn size={14} /> ADMIN LOGIN
+             </motion.button>
           </div>
         </div>
       </header>
