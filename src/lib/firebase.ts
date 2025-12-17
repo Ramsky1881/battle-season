@@ -2,15 +2,15 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Configuration provided by user
+// Configuration from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyB51xi7MdSatNhwrpjvGaLdzki5W0CXvfM",
-  authDomain: "xfive-battle-season.firebaseapp.com",
-  projectId: "xfive-battle-season",
-  storageBucket: "xfive-battle-season.firebasestorage.app",
-  messagingSenderId: "476615984544",
-  appId: "1:476615984544:web:ad164a340e0f72e3c590c5",
-  measurementId: "G-PCSM43PS9E"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 export const app = initializeApp(firebaseConfig);
