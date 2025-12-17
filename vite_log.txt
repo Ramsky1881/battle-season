@@ -1,0 +1,10 @@
+
+> xfive-battle-tournament@1.0.0 dev
+> vite --host
+
+
+  VITE v5.4.21  ready in 338 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.0.2:5173/
+1:53:09 AM [vite] hmr update /src/index.css, /src/context/TournamentContext.tsx
