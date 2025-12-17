@@ -5,7 +5,8 @@ import { TournamentProvider } from './context/TournamentContext';
 import ViewerLayout from './layouts/ViewerLayout';
 
 // Pages
-import ViewerPage from './pages/viewer/Landing';
+import TournamentView from './pages/viewer/TournamentView';
+import AdminLogin from './pages/admin/Login';
 
 export default function App() {
   return (
@@ -17,13 +18,12 @@ export default function App() {
 
           {/* VIEWER ROUTES */}
           <Route path="/tournament" element={<ViewerLayout />}>
-            <Route index element={<ViewerPage />} />
-            <Route path="room/:roomId" element={<ViewerPage />} />
-            {/* Note: In this version ViewerPage handles its own room state from context/admin setting,
-                but we support URL param for future deep linking if needed.
-                Currently ViewerPage uses appState.activeRoomViewer from Firebase.
-            */}
+            <Route index element={<TournamentView />} />
+            <Route path="room/:roomId" element={<TournamentView />} />
           </Route>
+
+          {/* ADMIN LOGIN */}
+          <Route path="/login" element={<AdminLogin />} />
 
           {/* CATCH ALL */}
           <Route path="*" element={<Navigate to="/tournament" replace />} />
