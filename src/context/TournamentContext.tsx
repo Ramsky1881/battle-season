@@ -6,19 +6,26 @@ import {
   signInAnonymously, onAuthStateChanged, signInWithCustomToken, Auth
 } from 'firebase/auth';
 import { getFirebaseAuth, getFirebaseDb, appId } from '../lib/firebase';
-import { Player, AppState } from '../types';
+import { Player, AppState, WheelMode } from '../types';
 
 interface TournamentContextType {
   user: any;
   players: Player[];
   appState: AppState;
+  wheelModes: WheelMode[];
   loading: boolean;
   isAdminMode: boolean; // Just a toggle for UI, real admin is guarded by route
   setStage: (stage: AppState['stage']) => Promise<void>;
   setViewerRoom: (room: string) => Promise<void>;
-  addPlayer: (name: string, room: string) => Promise<void>;
+  addPlayer: (name: string, nick: string, room: string) => Promise<void>;
+  updatePlayer: (id: string, data: Partial<Player>) => Promise<void>;
+  deletePlayer: (id: string) => Promise<void>;
   updateScore: (playerId: string, gameIndex: number, score: number) => Promise<void>;
   runWheel: (room: string) => Promise<void>;
+  spinRoomMode: (room: string) => Promise<void>;
+  addMode: (name: string, description: string) => Promise<void>;
+  updateMode: (id: string, data: Partial<WheelMode>) => Promise<void>;
+  deleteMode: (id: string) => Promise<void>;
   advanceQualifiers: (dayRooms: string[]) => Promise<void>;
   advanceSemis: () => Promise<void>;
   getPlayersInRoom: (room: string) => Player[];
@@ -29,6 +36,7 @@ const TournamentContext = createContext<TournamentContextType | undefined>(undef
 export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [wheelModes, setWheelModes] = useState<WheelMode[]>([]);
   const [appState, setAppState] = useState<AppState>({
     stage: 'QUALIFIERS_D1',
     activeRoomViewer: '1'
@@ -84,6 +92,13 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setLoading(false);
     });
 
+    // Listen to Wheel Modes
+    const qModes = query(collection(db, 'artifacts', appId, 'public', 'data', 'modes'));
+    const unsubModes = onSnapshot(qModes, (snapshot) => {
+      const mData = snapshot.docs.map(d => d.data() as WheelMode);
+      setWheelModes(mData);
+    });
+
     // Listen to App State
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
     const unsubState = onSnapshot(docRef, (snap) => {
@@ -98,6 +113,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     return () => {
       unsubPlayers();
+      unsubModes();
       unsubState();
     };
   }, [user]);
@@ -126,18 +142,35 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   // Actions
-  const addPlayer = async (name: string, room: string) => {
+  const addPlayer = async (name: string, nick: string, room: string) => {
     if (!dbRef.current) return;
     const db = dbRef.current;
     const newPlayer: Player = {
       id: crypto.randomUUID(),
       name,
+      nick,
       room,
       scores: [],
       totalScore: 0,
       status: 'active'
     };
     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', newPlayer.id), newPlayer);
+  };
+
+  const updatePlayer = async (id: string, data: Partial<Player>) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
+    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', id), data);
+  };
+
+  const deletePlayer = async (id: string) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
+    // Note: deleting doc is not exposed in default_api, but context likely needs it.
+    // However, the memory says "delete_file" is a tool. I need to use firebase deleteDoc.
+    // I can import deleteDoc.
+    const { deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', id));
   };
 
   const updateScore = async (playerId: string, gameIndex: number, score: number) => {
@@ -207,6 +240,40 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const spinRoomMode = async (room: string) => {
+    if (!dbRef.current || wheelModes.length === 0) return;
+    const db = dbRef.current;
+
+    // Pick random mode
+    const randomMode = wheelModes[Math.floor(Math.random() * wheelModes.length)];
+
+    // Update app state
+    const currentModes = appState.activeRoomModes || {};
+    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), {
+      activeRoomModes: { ...currentModes, [room]: randomMode.name }
+    });
+  };
+
+  const addMode = async (name: string, description: string) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
+    const id = crypto.randomUUID();
+    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'modes', id), { id, name, description });
+  };
+
+  const updateMode = async (id: string, data: Partial<WheelMode>) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
+    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'modes', id), data);
+  };
+
+  const deleteMode = async (id: string) => {
+    if (!dbRef.current) return;
+    const db = dbRef.current;
+    const { deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'modes', id));
+  };
+
   const advanceQualifiers = async (dayRooms: string[]) => {
     if (!dbRef.current) return;
     const db = dbRef.current;
@@ -262,8 +329,9 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   return (
     <TournamentContext.Provider value={{
-      user, players, appState, loading, isAdminMode,
-      setStage, setViewerRoom, addPlayer, updateScore, runWheel,
+      user, players, appState, wheelModes, loading, isAdminMode,
+      setStage, setViewerRoom, addPlayer, updatePlayer, deletePlayer, updateScore, runWheel, spinRoomMode,
+      addMode, updateMode, deleteMode,
       advanceQualifiers, advanceSemis, getPlayersInRoom
     }}>
       {children}
